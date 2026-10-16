@@ -158,6 +158,7 @@ h1 { margin: 0; font: 700 clamp(30px, 4.5vw, 42px)/1 var(--display); letter-spac
 .usage { font-weight: 700; }
 .bar-mini { display: block; height: 4px; border-radius: 2px; background: var(--line); margin-top: 4px; overflow: hidden; }
 .bar-mini i { display: block; height: 100%; background: var(--ink); }
+.opp-line { display: block; margin-top: 3px; font-size: 11.5px; color: var(--muted); white-space: nowrap; }
 .tr-up { color: var(--good); font-weight: 700; white-space: nowrap; }
 .tr-down { color: var(--bad); font-weight: 700; white-space: nowrap; }
 .tr-flat { color: var(--muted); white-space: nowrap; }
@@ -392,14 +393,14 @@ function card(t) {
   const rows = t.backs.map(p => `
     <tr class="rb-row${p.role === 'starter' ? ' is-starter' : ''}" data-id="${p.id}" tabindex="0" aria-label="${esc(p.name)} details">
       <td><span class="pname">${esc(p.name)}</span><span class="pbadges">${badges(p)}</span></td>
-      <td><span class="usage">${f1(p.share)}%</span><span class="bar-mini"><i style="width:${Math.min(100, p.share)}%"></i></span></td>
+      <td><span class="usage">${f1(p.share)}%</span><span class="bar-mini"><i style="width:${Math.min(100, p.share)}%"></i></span><span class="opp-line">${p.car} car · ${p.tgt} tgt</span></td>
       <td class="col-l4">${p.l4 == null ? '<span class="na">–</span>' : f1(p.l4) + '%'}</td>
       <td>${trend(p)}</td>
       <td><b>${f1(p.ppg[fmt])}</b></td>
     </tr>`).join('');
   return `<article class="card">
     <div class="card-head"><span class="abbr">${t.abbr}</span><span class="tname">${esc(t.name)}</span><span class="tier tier-${t.tier}">${TIER[t.tier].name}</span></div>
-    <table class="rb-table"><thead><tr><th>Back</th><th>Usage</th><th class="col-l4">Last 4</th><th>Trend</th><th>Pts/G</th></tr></thead>
+    <table class="rb-table"><thead><tr><th>Back</th><th title="Share of the team's RB carries + targets">Usage</th><th class="col-l4">Last 4</th><th>Trend</th><th>Pts/G</th></tr></thead>
     <tbody>${rows}</tbody></table>${outLine(t)}</article>`;
 }
 
