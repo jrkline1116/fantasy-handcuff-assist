@@ -150,6 +150,11 @@ h1 { margin: 0; font: 700 clamp(30px, 4.5vw, 42px)/1 var(--display); letter-spac
 .rb-table tr.is-starter td:first-child { box-shadow: inset 3px 0 0 var(--every); }
 .pname { font-weight: 600; display: block; line-height: 1.2; }
 .pbadges { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 3px; }
+.b-small { background: var(--surface); color: var(--muted); box-shadow: inset 0 0 0 1px var(--line-strong); }
+.out-line { margin: 0; padding: 8px 14px 10px; border-top: 1px dashed var(--line-strong); display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; font-size: 13.5px; }
+.out-label { font: 700 11.5px/1.35 var(--display); letter-spacing: .07em; text-transform: uppercase; color: var(--bad); }
+.out-back { border: 0; background: none; padding: 0; cursor: pointer; text-align: left; font-weight: 600; }
+.out-back:hover { text-decoration: underline; }
 .usage { font-weight: 700; }
 .bar-mini { display: block; height: 4px; border-radius: 2px; background: var(--line); margin-top: 4px; overflow: hidden; }
 .bar-mini i { display: block; height: 100%; background: var(--ink); }
@@ -288,6 +293,7 @@ dialog.detail::backdrop { background: rgba(10, 16, 22, .55); }
         <li><b>Every Down:</b> a back at 69% or more, either for the season or over the last 4 games.</li>
         <li><b>Committee:</b> three backs at 15% or more, with nobody at 50%.</li>
         <li><b>Split:</b> everything else, usually a lead back plus a real second option.</li>
+        <li>Backs on IR or PUP come off the depth chart, so the next backs move up and the tier is based on who can actually play. They're listed under <b>Out</b> on the team card.</li>
       </ul>
       <p>The tier measures workload, not production. The RB1 and RB2 badges answer whether he's worth starting.</p>
     </div>
@@ -325,7 +331,7 @@ try {
 const save = () => { try { localStorage.setItem('fha-prefs', JSON.stringify({ fmt: state.fmt, view: state.view })); } catch (e) {} };
 
 const all = [];
-DATA.teams.forEach(t => t.backs.forEach(p => { p.tier = t.tier; p.teamName = t.name; all.push(p); }));
+DATA.teams.forEach(t => [...t.backs, ...(t.out || [])].forEach(p => { p.tier = t.tier; p.teamName = t.name; all.push(p); }));
 const byId = id => all.find(p => p.id === id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const f1 = v => v == null ? '–' : v.toFixed(1);
@@ -344,7 +350,7 @@ function statusBadge(p) {
   return `<span class="badge b-${p.status.code}" title="${esc(p.status.label)}${p.status.injury ? ' · ' + esc(p.status.injury) : ''}">${short}${inj}</span>`;
 }
 function badges(p) {
-  return rankBadge(p) + (p.role === 'handcuff' ? '<span class="badge b-hc">Handcuff</span>' : '') + statusBadge(p);
+  return rankBadge(p) + (p.role === 'handcuff' ? '<span class="badge b-hc">Handcuff</span>' : '') + (p.g < 2 ? '<span class="badge b-small" title="Usage is from a single game">1 game</span>' : '') + statusBadge(p);
 }
 function trend(p) {
   if (p.trend == null) return '<span class="tr-flat">–</span>';
@@ -376,6 +382,11 @@ function renderPanels() {
     <span class="val">${f1(h.ppg[fmt])}<small>pts/g</small></span></li>`).join('');
 }
 
+function outLine(t) {
+  if (!t.out || !t.out.length) return '';
+  return `<p class="out-line"><span class="out-label">Out</span>${t.out.map(p =>
+    `<button type="button" class="out-back" data-id="${p.id}">${esc(p.name)} <span class="na">${esc(p.status.label.replace(/^IR, /, 'IR · '))} · was ${f1(p.share)}%</span></button>`).join('')}</p>`;
+}
 function card(t) {
   const fmt = state.fmt;
   const rows = t.backs.map(p => `
@@ -389,7 +400,7 @@ function card(t) {
   return `<article class="card">
     <div class="card-head"><span class="abbr">${t.abbr}</span><span class="tname">${esc(t.name)}</span><span class="tier tier-${t.tier}">${TIER[t.tier].name}</span></div>
     <table class="rb-table"><thead><tr><th>Back</th><th>Usage</th><th class="col-l4">Last 4</th><th>Trend</th><th>Pts/G</th></tr></thead>
-    <tbody>${rows}</tbody></table></article>`;
+    <tbody>${rows}</tbody></table>${outLine(t)}</article>`;
 }
 
 function renderTeams() {
@@ -483,7 +494,7 @@ const main = document.getElementById('main');
 main.addEventListener('click', e => {
   const th = e.target.closest('th[data-key]');
   if (th) { const k = th.dataset.key; state.sort = { key: k, dir: state.sort.key === k ? -state.sort.dir : (['name', 'team', 'tier'].includes(k) ? 1 : -1) }; render(); return; }
-  const row = e.target.closest('tr[data-id]'); if (row) openDetail(row.dataset.id);
+  const row = e.target.closest('tr[data-id], .out-back'); if (row) openDetail(row.dataset.id);
 });
 main.addEventListener('keydown', e => {
   if (e.key !== 'Enter' && e.key !== ' ') return;

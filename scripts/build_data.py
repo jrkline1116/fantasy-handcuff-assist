@@ -145,7 +145,11 @@ for p in plist:
 
 teams = []
 for team in sorted(rb):
-    backs = sorted([p for p in plist if p['team'] == team], key=lambda p: -p['opp'])
+    every = sorted([p for p in plist if p['team'] == team], key=lambda p: -p['opp'])
+    # Backs on IR/PUP can't play, so they come off the depth chart and the next backs move up.
+    is_out = lambda p: bool(p['status'] and p['status']['code'] in ('IR', 'PUP'))
+    backs = [p for p in every if not is_out(p)]
+    out = [p for p in every if is_out(p) and p['share'] >= 10][:3]
     top = backs[:3]
     q = [p for p in backs if p['g'] >= MIN_GAMES]
     ed = [p for p in q if p['share'] >= ED_CUT or (p['l4'] or 0) >= ED_CUT]
@@ -160,19 +164,19 @@ for team in sorted(rb):
     handcuff = None
     if ed:
         starter = max(ed, key=lambda p: p['share'])
-        healthy = [p for p in backs if p is not starter and not (p['status'] and p['status']['code'] in ('IR', 'PUP'))]
+        healthy = [p for p in backs if p is not starter]
         if healthy:
             handcuff = healthy[0]
             if handcuff not in top:
                 top = [p for p in top if p is starter] + [handcuff] + [p for p in top if p not in (starter, handcuff)][:1]
     if starter:
         top = [starter] + [p for p in top if p is not starter]
-    for p in backs:
-        p['role'] =('starter' if p is starter else 'handcuff' if p is handcuff else None)
+    for p in every:
+        p['role'] = ('starter' if p is starter else 'handcuff' if p is handcuff else None)
     teams.append(dict(abbr=team, name=TEAMS.get(team, team), tier=tier, games=len(team_weeks[team]),
                       starter=starter['id'] if starter else None,
                       handcuff=handcuff['id'] if handcuff else None,
-                      backs=top))
+                      backs=top, out=out))
 
 payload = json.dumps(dict(season=int(season), through_week=last_week,
                partial_week=sorted(t for t, w in team_weeks.items() if last_week in w),
@@ -184,4 +188,5 @@ with open(OUT, 'w') as fh:
 for t in teams:
     print(t['abbr'], t['tier'].upper(), ' | '.join(
         f"{p['name']} {p['share']}/{p['l4']} {p['ppg']['half']} r{p['rank'].get('half','-')}"
-        f"{' [HC]' if p['role']=='handcuff' else ''}{' ['+p['status']['code']+']' if p['status'] else ''}" for p in t['backs']))
+        f"{' [HC]' if p['role']=='handcuff' else ''}{' ['+p['status']['code']+']' if p['status'] else ''}" for p in t['backs'])
+          + (f"  || OUT: {', '.join(p['name'] for p in t['out'])}" if t['out'] else ''))
