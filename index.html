@@ -1,0 +1,502 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔗</text></svg>">
+<title>Fantasy Handcuff Assist</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Every NFL backfield sorted by workload: every-down backs, splits and committees, plus usage trends, startable RBs and the true handcuffs to own.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Layout: Defense Assist shell (nav, centered header, tab bar), then summary panels, then team cards grouped by tier; a full table view swaps in for the cards. */
+:root {
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  --bg: #eef1f4;
+  --surface: #ffffff;
+  --ink: #17202b;
+  --muted: #5d6874;
+  --line: #d9dfe6;
+  --line-strong: #b9c2cc;
+  --head: #1f2a37;
+  --head-ink: #f3f6f9;
+  --good: #1b873a;
+  --good-tint: #eaf6ee;
+  --bad: #c62828;
+  --bad-tint: #fdeeee;
+  --warn: #a35c00;
+  --warn-tint: #fff3df;
+  --focus: #2f6fd6;
+  --focus-tint: #e8f0fc;
+  --sorted: #fff8db;
+  --every: #1f2a37;
+  --every-ink: #ffffff;
+  --split: #3c5a7a;
+  --split-tint: #e5edf6;
+  --committee: #6b5a2e;
+  --committee-tint: #f3eedf;
+  --display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --body: Barlow, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f151c; --surface: #18212b; --ink: #e7edf3; --muted: #97a3b0; --line: #2a3542; --line-strong: #3b4858;
+    --head: #0a1016; --head-ink: #e7edf3; --good: #4cd17a; --good-tint: #183324; --bad: #ff6b60; --bad-tint: #3a1f22;
+    --warn: #f0b04a; --warn-tint: #3a2c14; --focus: #79a8ff; --focus-tint: #1b2a44; --sorted: #2e2a17;
+    --every: #e7edf3; --every-ink: #0f151c; --split: #9cc0e6; --split-tint: #1c2b3c; --committee: #dcc48a; --committee-tint: #33291a;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f151c; --surface: #18212b; --ink: #e7edf3; --muted: #97a3b0; --line: #2a3542; --line-strong: #3b4858;
+  --head: #0a1016; --head-ink: #e7edf3; --good: #4cd17a; --good-tint: #183324; --bad: #ff6b60; --bad-tint: #3a1f22;
+  --warn: #f0b04a; --warn-tint: #3a2c14; --focus: #79a8ff; --focus-tint: #1b2a44; --sorted: #2e2a17;
+  --every: #e7edf3; --every-ink: #0f151c; --split: #9cc0e6; --split-tint: #1c2b3c; --committee: #dcc48a; --committee-tint: #33291a;
+  color-scheme: dark;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; }
+[hidden] { display: none !important; }
+body {
+  background: var(--bg); color: var(--ink);
+  font: 400 15px/1.45 var(--body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 1280px; margin: 0 auto; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+.site-nav {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 20px;
+  margin: 0 calc(-1 * max(16px, env(safe-area-inset-left, 0px))) 0 calc(-1 * max(16px, env(safe-area-inset-right, 0px)));
+  padding-block: 10px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  background: var(--head); color: var(--head-ink);
+}
+.site-nav a { color: inherit; text-decoration: none; }
+.brand { font: 700 20px/1 var(--display); letter-spacing: .02em; }
+.nav-links { display: flex; gap: 16px; font-weight: 500; font-size: 14px; }
+.nav-links a[aria-current] { text-decoration: underline; text-underline-offset: 4px; }
+
+.top { text-align: center; padding-block: 24px 8px; }
+h1 { margin: 0; font: 700 clamp(30px, 4.5vw, 42px)/1 var(--display); letter-spacing: .01em; text-wrap: balance; }
+.tagline { margin: 8px auto 0; font-size: 17px; font-weight: 500; max-width: 60ch; text-wrap: balance; }
+.sub { margin: 6px 0 0; color: var(--muted); font-size: 14px; }
+
+.legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 18px; padding-block: 12px 18px; font-size: 13.5px; color: var(--muted); }
+.legend li { display: flex; align-items: center; gap: 6px; }
+.legend ul { display: contents; list-style: none; }
+
+.tier { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 4px; font: 700 12px/1.3 var(--display); letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; }
+.tier-every { background: var(--every); color: var(--every-ink); }
+.tier-split { background: var(--split-tint); color: var(--split); box-shadow: inset 0 0 0 1px var(--split); }
+.tier-committee { background: var(--committee-tint); color: var(--committee); box-shadow: inset 0 0 0 1px var(--committee); border-style: dashed; }
+.badge { display: inline-flex; align-items: center; padding: 1px 6px; border-radius: 3px; font: 700 11.5px/1.35 var(--display); letter-spacing: .05em; text-transform: uppercase; white-space: nowrap; }
+.b-rb1 { background: var(--good); color: var(--surface); }
+.b-rb2 { background: var(--good-tint); color: var(--good); box-shadow: inset 0 0 0 1px var(--good); }
+.b-hc { background: var(--focus-tint); color: var(--focus); box-shadow: inset 0 0 0 1px var(--focus); }
+.b-O, .b-IR, .b-PUP { background: var(--bad); color: var(--surface); }
+.b-D { background: var(--bad-tint); color: var(--bad); box-shadow: inset 0 0 0 1px var(--bad); }
+.b-DNP { background: var(--warn); color: var(--surface); }
+.b-Q, .b-LP { background: var(--warn-tint); color: var(--warn); box-shadow: inset 0 0 0 1px var(--warn); }
+.badge small { font: inherit; font-weight: 600; text-transform: none; letter-spacing: 0; opacity: .9; margin-left: 4px; }
+
+/* summary panels */
+.panels { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 14px; margin-bottom: 18px; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; min-width: 0; }
+.panel h2 { margin: 0 0 2px; font: 700 20px/1.1 var(--display); letter-spacing: .02em; }
+.panel .hint { margin: 0 0 10px; color: var(--muted); font-size: 13px; }
+.plist { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.plist li { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: baseline; padding: 5px 0; border-top: 1px solid var(--line); }
+.plist li:first-child { border-top: 0; }
+.plist .who { min-width: 0; }
+.plist .who b { font-weight: 600; }
+.plist .who small { color: var(--muted); display: block; font-size: 12.5px; }
+.plist .val { font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; text-align: right; }
+.plist .val small { display: block; color: var(--muted); font-weight: 400; font-size: 12px; }
+.empty { color: var(--muted); font-size: 14px; margin: 4px 0; }
+
+/* control bar */
+.bar { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; justify-content: space-between; margin-bottom: 14px; position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); padding-block: 8px; }
+.tabs { display: inline-flex; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 3px; gap: 2px; flex-wrap: wrap; }
+.tabs button { border: 0; background: transparent; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: 600; }
+.tabs button[aria-selected="true"], .tabs button[aria-pressed="true"] { background: var(--head); color: var(--head-ink); }
+.tabs-label { font: 600 12px/1 var(--display); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-right: 6px; }
+.group { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+
+/* tier sections + team cards */
+.tier-sec { margin-bottom: 26px; }
+.tier-sec > header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; margin-bottom: 10px; }
+.tier-sec h2 { margin: 0; font: 700 26px/1 var(--display); letter-spacing: .02em; }
+.tier-sec header p { margin: 0; color: var(--muted); font-size: 14px; }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 12px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; min-width: 0; }
+.card-head { display: flex; align-items: center; gap: 10px; padding: 10px 14px 8px; border-bottom: 1px solid var(--line); }
+.abbr { font: 700 22px/1 var(--display); letter-spacing: .03em; min-width: 3ch; }
+.tname { flex: 1; min-width: 0; color: var(--muted); font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rb-table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.rb-table th { font: 600 11.5px/1 var(--display); letter-spacing: .07em; text-transform: uppercase; color: var(--muted); text-align: right; padding: 8px 6px 4px; }
+.rb-table th:first-child { text-align: left; padding-left: 14px; }
+.rb-table th:last-child, .rb-table td:last-child { padding-right: 14px; }
+.rb-table td { padding: 7px 6px; text-align: right; border-top: 1px solid var(--line); vertical-align: middle; }
+.rb-table td:first-child { text-align: left; padding-left: 14px; }
+.rb-table tr.rb-row { cursor: pointer; }
+.rb-table tr.rb-row:hover td { background: var(--sorted); }
+.rb-table tr.is-starter td:first-child { box-shadow: inset 3px 0 0 var(--every); }
+.pname { font-weight: 600; display: block; line-height: 1.2; }
+.pbadges { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 3px; }
+.usage { font-weight: 700; }
+.bar-mini { display: block; height: 4px; border-radius: 2px; background: var(--line); margin-top: 4px; overflow: hidden; }
+.bar-mini i { display: block; height: 100%; background: var(--ink); }
+.tr-up { color: var(--good); font-weight: 700; white-space: nowrap; }
+.tr-down { color: var(--bad); font-weight: 700; white-space: nowrap; }
+.tr-flat { color: var(--muted); white-space: nowrap; }
+.na { color: var(--muted); }
+
+/* full table view */
+.full-wrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; }
+.full { border-collapse: separate; border-spacing: 0; width: max-content; min-width: 100%; font-variant-numeric: tabular-nums; font-size: 14px; }
+.full th, .full td { padding: 7px 10px; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.full thead th { position: sticky; top: 0; background: var(--head); color: var(--head-ink); font: 600 12.5px/1.15 var(--display); letter-spacing: .05em; text-transform: uppercase; cursor: pointer; user-select: none; }
+.full thead th[aria-sort] { background: var(--split); color: var(--surface); }
+.full th:nth-child(-n+4), .full td:nth-child(-n+4) { text-align: left; }
+.full th:first-child, .full td:first-child { position: sticky; left: 0; width: 96px; min-width: 96px; }
+.full th:nth-child(2), .full td:nth-child(2) { position: sticky; left: 96px; box-shadow: inset -1px 0 0 var(--line-strong); }
+.full td:first-child, .full td:nth-child(2) { background: var(--surface); }
+.full td:nth-child(2) { font-weight: 600; }
+.full thead th:first-child, .full thead th:nth-child(2) { z-index: 2; }
+.full tbody tr { cursor: pointer; }
+.full tbody tr:hover td { background: var(--sorted); }
+.grp-start { border-left: 1px solid var(--line-strong); }
+.full th.narrow, .full td.narrow { padding-left: 6px; padding-right: 6px; }
+.full th.left, .full td.left { text-align: left; }
+
+/* detail dialog */
+dialog.detail { border: 1px solid var(--line-strong); border-radius: 10px; padding: 0; width: min(560px, calc(100vw - 32px)); background: var(--surface); color: var(--ink); }
+dialog.detail::backdrop { background: rgba(10, 16, 22, .55); }
+.d-head { display: flex; gap: 12px; align-items: start; padding: 16px 18px 12px; border-bottom: 1px solid var(--line); }
+.d-head h3 { margin: 0; font: 700 26px/1.05 var(--display); }
+.d-head p { margin: 4px 0 0; color: var(--muted); font-size: 14px; }
+.d-close { margin-left: auto; border: 1px solid var(--line); background: var(--surface); border-radius: 6px; width: 34px; height: 34px; cursor: pointer; flex: none; }
+.d-body { padding: 14px 18px 18px; display: grid; gap: 14px; }
+.d-note { margin: 0; padding: 8px 12px; border-radius: 6px; background: var(--warn-tint); color: var(--ink); font-size: 14px; }
+.stat-group h4 { margin: 0 0 6px; font: 600 12.5px/1 var(--display); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 6px; margin: 0; }
+.stats div { border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; }
+.stats dt { font-size: 12px; color: var(--muted); }
+.stats dd { margin: 0; font: 700 20px/1.2 var(--display); font-variant-numeric: tabular-nums; }
+
+.about { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 12px 36px; margin-top: 30px; padding-block: 22px 8px; border-top: 1px solid var(--line); }
+.about h2 { margin: 0 0 6px; font: 700 22px/1.1 var(--display); }
+.about p, .about li { color: var(--ink); max-width: 66ch; }
+.about ul { padding-left: 18px; margin: 6px 0; }
+.foot { text-align: center; color: var(--muted); font-size: 13.5px; padding-block: 18px 30px; border-top: 1px solid var(--line); margin-top: 20px; }
+.foot a { color: var(--focus); }
+.foot p { margin: 6px auto; max-width: 75ch; }
+.preview-note { display: inline-block; margin-top: 10px; padding: 4px 10px; border-radius: 4px; background: var(--warn-tint); color: var(--warn); font-size: 13px; font-weight: 600; }
+
+@media (max-width: 520px) {
+  .rb-table .col-l4 { display: none; }
+  .nav-links { gap: 12px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+
+
+<nav class="site-nav" aria-label="Site">
+  <a class="brand" href="#top">🔗 Fantasy Handcuff Assist</a>
+  <span class="nav-links"><a href="#top" aria-current="page">Backfields</a><a href="#how-it-works">How it works</a></span>
+</nav>
+
+<div class="wrap" id="top">
+  <header class="top">
+    <h1>Fantasy Handcuff Assist</h1>
+    <p class="tagline">Who owns the backfield, who to start, who's rising, and who to handcuff, for all 32 teams.</p>
+    <p class="sub" id="sub"></p>
+    <span class="preview-note">Preview build: real 2026 data, design not final</span>
+  </header>
+
+  <ul class="legend" aria-label="Key">
+    <li><span class="tier tier-every">Every Down</span> 69%+ of RB carries + targets</li>
+    <li><span class="tier tier-split">Split</span> two-back backfield</li>
+    <li><span class="tier tier-committee">Committee</span> three backs, nobody 50%+</li>
+    <li><span class="badge b-rb1">RB1</span><span class="badge b-rb2">RB2</span> top 12 / top 24 in points per game</li>
+    <li><span class="badge b-hc">Handcuff</span> backup to an every-down back</li>
+    <li><span class="badge b-DNP">DNP</span><span class="badge b-LP">LP</span> did not practice / limited this week</li>
+    <li><span class="tr-up">▲</span><span class="tr-down">▼</span> usage up or down 5+ pts over last 4 games</li>
+  </ul>
+
+  <section class="panels" aria-label="This week's highlights">
+    <div class="panel">
+      <h2>Handcuff alerts</h2>
+      <p class="hint">Every-down backs on the injury report. Their handcuff may be in line for the job.</p>
+      <ul class="plist" id="alerts"></ul>
+    </div>
+    <div class="panel">
+      <h2>Usage risers</h2>
+      <p class="hint">Biggest jumps in workload share over the last 4 games. Pickup candidates.</p>
+      <ul class="plist" id="risers"></ul>
+    </div>
+    <div class="panel">
+      <h2>Handcuffs to own</h2>
+      <p class="hint">Ranked by how much of the work the starter holds, so how much the backup would inherit.</p>
+      <ul class="plist" id="cuffs"></ul>
+    </div>
+  </section>
+
+  <div class="bar">
+    <div class="group">
+      <span class="tabs-label">Scoring</span>
+      <div class="tabs" role="tablist" aria-label="Scoring" id="fmtTabs">
+        <button type="button" role="tab" data-fmt="ppr" aria-selected="false" id="fmt-ppr">PPR</button>
+        <button type="button" role="tab" data-fmt="half" aria-selected="true" id="fmt-half">Half-PPR</button>
+        <button type="button" role="tab" data-fmt="std" aria-selected="false" id="fmt-std">Standard</button>
+      </div>
+    </div>
+    <div class="group">
+      <span class="tabs-label">View</span>
+      <div class="tabs" aria-label="View" id="viewTabs">
+        <button type="button" data-view="teams" aria-pressed="true" id="view-teams">By team</button>
+        <button type="button" data-view="table" aria-pressed="false" id="view-table">All RBs</button>
+      </div>
+    </div>
+    <div class="group">
+      <span class="tabs-label">Tier</span>
+      <div class="tabs" aria-label="Filter by tier" id="tierTabs">
+        <button type="button" data-tier="all" aria-pressed="true" id="tier-all">All</button>
+        <button type="button" data-tier="every" aria-pressed="false" id="tier-every">Every Down</button>
+        <button type="button" data-tier="split" aria-pressed="false" id="tier-split">Split</button>
+        <button type="button" data-tier="committee" aria-pressed="false" id="tier-committee">Committee</button>
+      </div>
+    </div>
+  </div>
+
+  <main id="main"></main>
+
+  <section class="about" id="how-it-works">
+    <div>
+      <h2>How backfields are tiered</h2>
+      <p>Usage is each running back's share of his team's RB carries plus targets, counted only in games he played, so a missed game doesn't drag his number down.</p>
+      <ul>
+        <li><b>Every Down:</b> a back at 69% or more, either for the season or over the last 4 games.</li>
+        <li><b>Committee:</b> three backs at 15% or more, with nobody at 50%.</li>
+        <li><b>Split:</b> everything else, usually a lead back plus a real second option.</li>
+      </ul>
+      <p>The tier measures workload, not production. The RB1 and RB2 badges answer whether he's worth starting.</p>
+    </div>
+    <div>
+      <h2>What makes a true handcuff</h2>
+      <p>A handcuff is the next healthy back behind an every-down starter. If the starter goes down, he inherits a workload no one else on the roster is sharing. The #2 back in a split already has a role, so his value doesn't depend on an injury.</p>
+      <p>Handcuffs are ranked by the starter's share: the more of the backfield the starter owns, the bigger the job waiting for his backup.</p>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <p id="footNote"></p>
+    <p><b>Also from us:</b> <a href="https://fantasydefenseassist.com/">Fantasy Defense Assist</a>, streaming defenses weekly · <a href="https://fantasyinjuryassist.com/">Fantasy Injury Assist</a>, injury and status alerts for your roster</p>
+    <p><a href="https://buymeacoffee.com/jrkline1116">☕ Buy me a coffee</a> if this site helps you win your week.</p>
+  </footer>
+</div>
+
+<dialog class="detail" id="detail" aria-labelledby="dTitle"><div id="dBody"></div></dialog>
+
+<script src="data/backfields.js"></script>
+<script>
+const DATA = window.FHA_DATA;
+const FMT_LABEL = { ppr: 'PPR', half: 'Half-PPR', std: 'Standard' };
+const TIER = {
+  every: { name: 'Every Down', blurb: 'One back owns the workload. His backup is a true handcuff.' },
+  split: { name: 'Split', blurb: 'A lead back plus a real second option.' },
+  committee: { name: 'Committee', blurb: 'Three backs share the work. Hard to trust any of them weekly.' }
+};
+const state = { fmt: 'half', view: 'teams', tier: 'all', sort: { key: 'rank', dir: -1 } };
+try {
+  const saved = JSON.parse(localStorage.getItem('fha-prefs') || '{}');
+  if (saved.fmt in FMT_LABEL) state.fmt = saved.fmt;
+  if (saved.view === 'teams' || saved.view === 'table') state.view = saved.view;
+} catch (e) {}
+const save = () => { try { localStorage.setItem('fha-prefs', JSON.stringify({ fmt: state.fmt, view: state.view })); } catch (e) {} };
+
+const all = [];
+DATA.teams.forEach(t => t.backs.forEach(p => { p.tier = t.tier; p.teamName = t.name; all.push(p); }));
+const byId = id => all.find(p => p.id === id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const f1 = v => v == null ? '–' : v.toFixed(1);
+
+function rankBadge(p) {
+  const r = p.rank[state.fmt];
+  if (!r) return '';
+  if (r <= 12) return `<span class="badge b-rb1">RB1</span>`;
+  if (r <= 24) return `<span class="badge b-rb2">RB2</span>`;
+  return '';
+}
+function statusBadge(p) {
+  if (!p.status) return '';
+  const short = { IR: 'IR', PUP: 'PUP', O: 'Out', D: 'Doubtful', Q: 'Q', DNP: 'DNP', LP: 'LP' }[p.status.code];
+  const inj = p.status.injury ? `<small>· ${esc(p.status.injury.toLowerCase())}</small>` : '';
+  return `<span class="badge b-${p.status.code}" title="${esc(p.status.label)}${p.status.injury ? ' · ' + esc(p.status.injury) : ''}">${short}${inj}</span>`;
+}
+function badges(p) {
+  return rankBadge(p) + (p.role === 'handcuff' ? '<span class="badge b-hc">Handcuff</span>' : '') + statusBadge(p);
+}
+function trend(p) {
+  if (p.trend == null) return '<span class="tr-flat">–</span>';
+  const v = p.trend, s = (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v).toFixed(1);
+  if (v >= DATA.rules.trend) return `<span class="tr-up" title="Last 4: ${f1(p.l4)}%">▲ ${s}</span>`;
+  if (v <= -DATA.rules.trend) return `<span class="tr-down" title="Last 4: ${f1(p.l4)}%">▼ ${s}</span>`;
+  return `<span class="tr-flat">${s}</span>`;
+}
+
+function renderPanels() {
+  const fmt = state.fmt;
+  const alerts = DATA.teams.filter(t => t.starter).map(t => [byId(t.starter), byId(t.handcuff)]).filter(([s]) => s.status && s.status.code !== 'LP');
+  document.getElementById('alerts').innerHTML = alerts.length ? alerts.map(([s, h]) => `
+    <li><span class="who"><b>${esc(s.name)}</b> ${statusBadge(s)}<small>${s.team} · ${esc(s.status.label)}${s.status.injury ? ', ' + esc(s.status.injury) : ''}</small></span>
+    <span class="val">${h ? esc(h.name) : '–'}<small>handcuff</small></span></li>`).join('')
+    : '<li class="empty">No every-down backs on the injury report right now.</li>';
+
+  const risers = all.filter(p => p.trend != null && p.trend >= DATA.rules.trend && !(p.status && /IR|PUP/.test(p.status.code)))
+    .sort((a, b) => b.trend - a.trend).slice(0, 6);
+  document.getElementById('risers').innerHTML = risers.length ? risers.map(p => `
+    <li><span class="who"><b>${esc(p.name)}</b> ${badges(p)}<small>${p.team} · ${f1(p.share)}% season → ${f1(p.l4)}% last 4</small></span>
+    <span class="val"><span class="tr-up">▲ +${p.trend.toFixed(1)}</span><small>${f1(p.ppg[fmt])} pts/g</small></span></li>`).join('')
+    : '<li class="empty">No backs up 5+ points over the last 4 games.</li>';
+
+  const cuffs = DATA.teams.filter(t => t.handcuff).map(t => [byId(t.starter), byId(t.handcuff)])
+    .sort((a, b) => b[0].share - a[0].share).slice(0, 8);
+  document.getElementById('cuffs').innerHTML = cuffs.map(([s, h]) => `
+    <li><span class="who"><b>${esc(h.name)}</b> ${statusBadge(h)}<small>${h.team} · behind ${esc(s.name)} (${f1(s.share)}%)</small></span>
+    <span class="val">${f1(h.ppg[fmt])}<small>pts/g</small></span></li>`).join('');
+}
+
+function card(t) {
+  const fmt = state.fmt;
+  const rows = t.backs.map(p => `
+    <tr class="rb-row${p.role === 'starter' ? ' is-starter' : ''}" data-id="${p.id}" tabindex="0" aria-label="${esc(p.name)} details">
+      <td><span class="pname">${esc(p.name)}</span><span class="pbadges">${badges(p)}</span></td>
+      <td><span class="usage">${f1(p.share)}%</span><span class="bar-mini"><i style="width:${Math.min(100, p.share)}%"></i></span></td>
+      <td class="col-l4">${p.l4 == null ? '<span class="na">–</span>' : f1(p.l4) + '%'}</td>
+      <td>${trend(p)}</td>
+      <td><b>${f1(p.ppg[fmt])}</b></td>
+    </tr>`).join('');
+  return `<article class="card">
+    <div class="card-head"><span class="abbr">${t.abbr}</span><span class="tname">${esc(t.name)}</span><span class="tier tier-${t.tier}">${TIER[t.tier].name}</span></div>
+    <table class="rb-table"><thead><tr><th>Back</th><th>Usage</th><th class="col-l4">Last 4</th><th>Trend</th><th>Pts/G</th></tr></thead>
+    <tbody>${rows}</tbody></table></article>`;
+}
+
+function renderTeams() {
+  const tiers = state.tier === 'all' ? ['every', 'split', 'committee'] : [state.tier];
+  return tiers.map(k => {
+    const teams = DATA.teams.filter(t => t.tier === k)
+      .sort((a, b) => Math.max(...b.backs.map(p => p.share)) - Math.max(...a.backs.map(p => p.share)));
+    if (!teams.length) return '';
+    return `<section class="tier-sec"><header><h2>${TIER[k].name}</h2><p>${teams.length} teams · ${TIER[k].blurb}</p></header>
+      <div class="cards">${teams.map(card).join('')}</div></section>`;
+  }).join('');
+}
+
+const TIER_SHORT = { every: 'Every', split: 'Split', committee: 'Comm' };
+const SEV = { IR: 6, PUP: 6, O: 5, D: 4, DNP: 3, Q: 2, LP: 1 };
+const COLS = [
+  ['rank', 'RB Rank', p => p.rank[state.fmt] ? `${p.rank[state.fmt]} ${rankBadge(p)}` : '–', p => -(p.rank[state.fmt] ?? 999)],
+  ['name', 'Back', p => esc(p.name), p => p.name],
+  ['team', 'Team', p => p.team, p => p.team, 'narrow'],
+  ['tier', 'Tier', p => `<span class="tier tier-${p.tier}" title="${TIER[p.tier].name}">${TIER_SHORT[p.tier]}</span>${p.role === 'handcuff' ? ' <span class="badge b-hc">HC</span>' : ''}`, p => p.tier, 'narrow'],
+  ['pts', 'Pts', p => f1(p.pts[state.fmt]), p => p.pts[state.fmt], 'grp-start'],
+  ['ppg', 'Pts/G', p => `<b>${f1(p.ppg[state.fmt])}</b>`, p => p.ppg[state.fmt]],
+  ['g', 'G', p => p.g, p => p.g, 'grp-start'],
+  ['share', 'Usage', p => f1(p.share) + '%', p => p.share],
+  ['l4', 'Last 4', p => p.l4 == null ? '–' : f1(p.l4) + '%', p => p.l4 ?? -1],
+  ['trend', 'Trend', trend, p => p.trend ?? -99],
+  ['car_sh', 'Carry %', p => f1(p.car_sh) + '%', p => p.car_sh, 'grp-start'],
+  ['tgt_sh', 'Target %', p => f1(p.tgt_sh) + '%', p => p.tgt_sh],
+  ['car', 'Car', p => p.car, p => p.car, 'grp-start'],
+  ['rushyd', 'Rush Yds', p => p.rushyd, p => p.rushyd],
+  ['ypc', 'YPC', p => f1(p.ypc), p => p.ypc ?? -1],
+  ['tgt', 'Tgt', p => p.tgt, p => p.tgt, 'grp-start'],
+  ['rec', 'Rec', p => p.rec, p => p.rec],
+  ['recyd', 'Rec Yds', p => p.recyd, p => p.recyd],
+  ['ypt', 'Yds/Tgt', p => f1(p.ypt), p => p.ypt ?? -1],
+  ['rushtd', 'Rush TD', p => p.rushtd, p => p.rushtd, 'grp-start'],
+  ['rectd', 'Rec TD', p => p.rectd, p => p.rectd],
+  ['td', 'Tot TD', p => p.td, p => p.td],
+  ['inj', 'Injury', p => p.status ? statusBadge(p) + (/IR|PUP/.test(p.status.code) ? ` <span class="na">${esc(p.status.label.replace(/^(IR|PUP)(, | list)?/, ''))}</span>` : '') : '<span class="na">–</span>', p => SEV[p.status?.code] ?? 0, 'grp-start left']
+];
+function renderTable() {
+  const rows = all.filter(p => state.tier === 'all' || p.tier === state.tier);
+  const col = COLS.find(c => c[0] === state.sort.key);
+  rows.sort((a, b) => { const x = col[3](a), y = col[3](b); return (x > y ? 1 : x < y ? -1 : 0) * state.sort.dir; });
+  const head = COLS.map(c => `<th class="${c[4] || ''}" data-key="${c[0]}" ${c[0] === state.sort.key ? `aria-sort="${state.sort.dir < 0 ? 'descending' : 'ascending'}"` : ''} tabindex="0">${c[1]}${c[0] === state.sort.key ? (state.sort.dir < 0 ? ' ▼' : ' ▲') : ''}</th>`).join('');
+  const body = rows.map(p => `<tr data-id="${p.id}">${COLS.map(c => `<td class="${c[4] || ''}">${c[2](p)}</td>`).join('')}</tr>`).join('');
+  return `<div class="full-wrap"><table class="full"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`;
+}
+
+function render() {
+  document.getElementById('main').innerHTML = state.view === 'teams' ? renderTeams() : renderTable();
+  renderPanels();
+  document.getElementById('footNote').textContent = `Points use ${FMT_LABEL[state.fmt]} scoring. Usage counts carries plus targets in games each back played. Data from public NFL box scores via nflverse, updated Tuesday mornings.`;
+}
+
+function openDetail(id) {
+  const p = byId(id); if (!p) return;
+  const fmt = state.fmt;
+  const st = (label, v) => `<div><dt>${label}</dt><dd>${v}</dd></div>`;
+  const rank = p.rank[fmt];
+  document.getElementById('dBody').innerHTML = `
+    <div class="d-head"><div><h3 id="dTitle">${esc(p.name)}</h3>
+      <p>${esc(p.teamName)} · <span class="tier tier-${p.tier}">${TIER[p.tier].name}</span> ${badges(p)}</p></div>
+      <button type="button" class="d-close" aria-label="Close" id="dClose">✕</button></div>
+    <div class="d-body">
+      ${p.status ? `<p class="d-note"><b>${esc(p.status.label)}</b>${p.status.injury ? ' · ' + esc(p.status.injury) : ''}</p>` : ''}
+      ${p.missed ? `<p class="d-note">Missed ${p.missed} of ${p.tg} team games. Usage counts only the ${p.g} he played.</p>` : ''}
+      <div class="stat-group"><h4>Workload</h4><dl class="stats">
+        ${st('Usage, season', f1(p.share) + '%')}${st('Usage, last 4', p.l4 == null ? '–' : f1(p.l4) + '%')}${st('Trend', trend(p))}
+        ${st('Carry share', f1(p.car_sh) + '%')}${st('Target share', f1(p.tgt_sh) + '%')}${st('Games', p.g + ' of ' + p.tg)}</dl></div>
+      <div class="stat-group"><h4>Rushing</h4><dl class="stats">
+        ${st('Carries', p.car)}${st('Rush yards', p.rushyd)}${st('Yards/carry', f1(p.ypc))}${st('Rush TD', p.rushtd)}</dl></div>
+      <div class="stat-group"><h4>Receiving</h4><dl class="stats">
+        ${st('Targets', p.tgt)}${st('Receptions', p.rec)}${st('Rec yards', p.recyd)}${st('Yards/target', f1(p.ypt))}${st('Rec TD', p.rectd)}</dl></div>
+      <div class="stat-group"><h4>Fantasy, ${FMT_LABEL[fmt]}</h4><dl class="stats">
+        ${st('Total points', f1(p.pts[fmt]))}${st('Points/game', f1(p.ppg[fmt]))}${st('RB rank', rank ? '#' + rank : '–')}${st('Total TD', p.td)}</dl></div>
+    </div>`;
+  const dlg = document.getElementById('detail');
+  dlg.showModal();
+  document.getElementById('dClose').onclick = () => dlg.close();
+}
+document.getElementById('detail').addEventListener('click', e => { if (e.target.id === 'detail') e.target.close(); });
+
+function setPressed(groupId, attr, val) {
+  document.querySelectorAll(`#${groupId} button`).forEach(b => b.setAttribute(attr, String(b.dataset[groupId === 'fmtTabs' ? 'fmt' : groupId === 'viewTabs' ? 'view' : 'tier'] === val)));
+}
+document.getElementById('fmtTabs').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; state.fmt = b.dataset.fmt; setPressed('fmtTabs', 'aria-selected', state.fmt); save(); render(); });
+document.getElementById('viewTabs').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; state.view = b.dataset.view; setPressed('viewTabs', 'aria-pressed', state.view); save(); render(); });
+document.getElementById('tierTabs').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; state.tier = b.dataset.tier; setPressed('tierTabs', 'aria-pressed', state.tier); render(); });
+const main = document.getElementById('main');
+main.addEventListener('click', e => {
+  const th = e.target.closest('th[data-key]');
+  if (th) { const k = th.dataset.key; state.sort = { key: k, dir: state.sort.key === k ? -state.sort.dir : (['name', 'team', 'tier'].includes(k) ? 1 : -1) }; render(); return; }
+  const row = e.target.closest('tr[data-id]'); if (row) openDetail(row.dataset.id);
+});
+main.addEventListener('keydown', e => {
+  if (e.key !== 'Enter' && e.key !== ' ') return;
+  const t = e.target.closest('[data-id],th[data-key]'); if (!t) return; e.preventDefault(); t.click();
+});
+document.querySelector('.panels').addEventListener('click', e => {});
+
+const partial = DATA.partial_week.length && DATA.partial_week.length < 28 ? ` (Week ${DATA.through_week}: ${DATA.partial_week.join(', ')} so far)` : '';
+document.getElementById('sub').textContent = `${DATA.season} season · stats through Week ${DATA.partial_week.length < 28 ? DATA.through_week - 1 : DATA.through_week}${partial} · updated Tuesday mornings`;
+setPressed('fmtTabs', 'aria-selected', state.fmt);
+setPressed('viewTabs', 'aria-pressed', state.view);
+render();
+</script>
+
+</body>
+</html>
